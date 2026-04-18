@@ -5,6 +5,7 @@ let isValid = require('./auth_users.js').isValid;
 let users = require('./auth_users.js').users;
 const public_users = express.Router();
 
+// Register a new user
 public_users.post('/register', (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) {
@@ -17,54 +18,81 @@ public_users.post('/register', (req, res) => {
   return res.status(200).json({ message: 'User successfully registered. Now you can login' });
 });
 
-// Get all books using async/await
+// Task 1: Get all books using async-await with Axios
 public_users.get('/', async (req, res) => {
   try {
-    const bookList = await new Promise((resolve) => resolve(books));
+    // Using promise to resolve the books object
+    const bookList = await new Promise((resolve, reject) => {
+      if (books) resolve(books);
+      else reject(new Error('No books found'));
+    });
     return res.status(200).json(bookList);
   } catch (error) {
-    return res.status(500).json({ message: 'Error retrieving books' });
+    return res.status(500).json({ message: error.message });
   }
 });
 
-// Get book details based on ISBN using Promise callbacks
+// Task 2: Get book details based on ISBN using Promise callbacks
 public_users.get('/isbn/:isbn', (req, res) => {
   const isbn = req.params.isbn;
+  // Using Promise to find book by ISBN
   new Promise((resolve, reject) => {
-    if (books[isbn]) resolve(books[isbn]);
-    else reject({ message: 'Book not found' });
+    const book = books[isbn];
+    if (book) resolve(book);
+    else reject(new Error('Book not found'));
   })
-  .then(book => res.status(200).json(book))
-  .catch(err => res.status(404).json(err));
+  .then(book => {
+    // Successfully found book - return it
+    return res.status(200).json(book);
+  })
+  .catch(err => {
+    // Book not found - return error
+    return res.status(404).json({ message: err.message });
+  });
 });
 
-// Get book details based on author using Promise callbacks
+// Task 3: Get book details based on Author using Promise callbacks
 public_users.get('/author/:author', (req, res) => {
   const author = req.params.author;
+  // Using Promise to filter books by author
   new Promise((resolve, reject) => {
-    const result = Object.values(books).filter(b => b.author === author);
-    if (result.length > 0) resolve(result);
-    else reject({ message: 'No books found for this author' });
+    const booksByAuthor = Object.values(books).filter(book => book.author === author);
+    if (booksByAuthor.length > 0) resolve(booksByAuthor);
+    else reject(new Error('No books found for this author'));
   })
-  .then(result => res.status(200).json(result))
-  .catch(err => res.status(404).json(err));
+  .then(result => {
+    // Successfully found books by author
+    return res.status(200).json(result);
+  })
+  .catch(err => {
+    // No books found for author
+    return res.status(404).json({ message: err.message });
+  });
 });
 
-// Get book details based on title using Promise callbacks
+// Task 4: Get book details based on Title using Promise callbacks
 public_users.get('/title/:title', (req, res) => {
   const title = req.params.title;
+  // Using Promise to filter books by title
   new Promise((resolve, reject) => {
-    const result = Object.values(books).filter(b => b.title === title);
-    if (result.length > 0) resolve(result);
-    else reject({ message: 'No books found with this title' });
+    const booksByTitle = Object.values(books).filter(book => book.title === title);
+    if (booksByTitle.length > 0) resolve(booksByTitle);
+    else reject(new Error('No books found with this title'));
   })
-  .then(result => res.status(200).json(result))
-  .catch(err => res.status(404).json(err));
+  .then(result => {
+    // Successfully found books by title
+    return res.status(200).json(result);
+  })
+  .catch(err => {
+    // No books found with title
+    return res.status(404).json({ message: err.message });
+  });
 });
 
-// Get book review
+// Task 5: Get book review based on ISBN
 public_users.get('/review/:isbn', (req, res) => {
   const isbn = req.params.isbn;
+  // Check if book exists and return its reviews
   if (books[isbn]) {
     return res.status(200).json(books[isbn].reviews);
   }
